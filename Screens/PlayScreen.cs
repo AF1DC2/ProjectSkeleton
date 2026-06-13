@@ -1,22 +1,19 @@
-using TheAdventure.Game.Map;
+using TheAdventure.Game;
+using TheAdventure.Core;
 using TheAdventure.Input;
 using TheAdventure.Rendering;
 
 namespace TheAdventure.Screens;
 
-/// <summary> Generates a dungeon floor and draws it to verify generator </summary>
+/// <summary> Drives a live run, maps key presses to player turns and renders the world </summary>
 public sealed class PlayScreen : IScreen
 {
     public const int MapCols = 56;
     public const int MapRows = 36;
-    private const int TileSize = 15;
 
-    private GeneratedLevel _level;
+    private readonly GameWorld _world;
 
-    public PlayScreen()
-    {
-        _level = new DungeonGenerator(new Random()).Generate(MapCols, MapRows);
-    }
+    public PlayScreen() => _world = new GameWorld(MapCols, MapRows);
 
     public IScreen? Update(InputState input, double deltaSeconds)
     {
@@ -25,32 +22,52 @@ public sealed class PlayScreen : IScreen
             return new TitleScreen();
         }
 
-        if (input.WasPressed(KeyCode.R))
+        if (_world.Status != GameStatus.Playing)
         {
-            _level = new DungeonGenerator(new Random()).Generate(MapCols, MapRows);
+            // Run finished
+            if (input.AnyPressed)
+            {
+                return new TitleScreen();
+            }
+
+            return this;
+        }
+
+        HandleMovement(input);
+
+        if (input.FirstPressed(KeyCode.Period, KeyCode.Return, KeyCode.KpEnter) is not null)
+        {
+            _world.Descend();
         }
 
         return this;
     }
 
+    private void HandleMovement(InputState input)
+    {
+        var direction = input.FirstPressed(KeyCode.Up, KeyCode.W) is not null ? Direction.North
+            : input.FirstPressed(KeyCode.Down, KeyCode.S) is not null ? Direction.South
+            : input.FirstPressed(KeyCode.Left, KeyCode.A) is not null ? Direction.West
+            : input.FirstPressed(KeyCode.Right, KeyCode.D) is not null ? Direction.East
+            : Direction.None;
+
+        if (direction != Direction.None)
+        {
+            _world.MovePlayer(direction);
+        }
+    }
+
     public void Render(SdlPlatform platform)
     {
-        var originX = (platform.Width - MapCols * TileSize) / 2;
-        var originY = (platform.Height - MapRows * TileSize) / 2;
+        WorldView.Render(platform, _world);
 
-        foreach (var (pos, tile) in _level.Map.Tiles)
+        if (_world.Status == GameStatus.Won)
         {
-            var color = tile switch
-            {
-                TileType.Wall => Color.Wall,
-                TileType.Floor => Color.Floor,
-                TileType.StairsDown => Color.Stairs,
-                _ => Color.Background,
-            };
-
-            platform.FillRect(originX + pos.X * TileSize, originY + pos.Y * TileSize, TileSize - 1, TileSize - 1, color);
+            BlockFont.DrawCenteredOutlined(platform, "YOU ESCAPED!", platform.Width, 320, 6, Color.Stairs, Color.Black);
         }
-
-        BlockFont.DrawOutlined(platform, "R REGEN   ESC MENU", 12, 12, 2, Color.White, Color.Black);
+        else if (_world.Status == GameStatus.Lost)
+        {
+            BlockFont.DrawCenteredOutlined(platform, "YOU DIED", platform.Width, 320, 6, Color.HealthBar, Color.Black);
+        }
     }
 }
