@@ -1,4 +1,5 @@
 using TheAdventure.Core;
+using TheAdventure.Game.Items;
 using TheAdventure.Rendering;
 
 namespace TheAdventure.Game.Entities;
@@ -13,11 +14,12 @@ public sealed class Player : Actor
 
     public int Gold { get; private set; }
 
+    public Inventory Inventory { get; } = new();
+
     public int SightRadius => 7;
 
     public void AddGold(int amount) => Gold += Math.Max(0, amount);
 
-    /// <summary> Permanently raises max health (used by stat-boosting pickups) </summary>
     public void IncreaseMaxHealth(int amount)
     {
         MaxHealth += amount;

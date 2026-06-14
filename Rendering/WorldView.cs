@@ -1,5 +1,7 @@
+using TheAdventure.Core;
 using TheAdventure.Game;
 using TheAdventure.Game.Entities;
+using TheAdventure.Game.Items;
 using TheAdventure.Game.Map;
 
 namespace TheAdventure.Rendering;
@@ -20,9 +22,21 @@ public static class WorldView
         var originY = HudTop + (availHeight - map.Height * tile) / 2;
 
         DrawMap(platform, world, originX, originY, tile);
+        DrawItems(platform, world, originX, originY, tile);
         DrawActors(platform, world, originX, originY, tile);
         DrawHud(platform, world);
         DrawLog(platform, world);
+    }
+
+    private static void DrawItems(SdlPlatform platform, GameWorld world, int originX, int originY, int tile)
+    {
+        foreach (var (pos, item) in world.FloorItems)
+        {
+            if (world.Map.Visible[pos])
+            {
+                DrawGlyphAt(platform, item.Glyph, item.Color, pos, originX, originY, tile);
+            }
+        }
     }
 
     private static void DrawMap(SdlPlatform platform, GameWorld world, int originX, int originY, int tile)
@@ -58,18 +72,22 @@ public static class WorldView
             }
         }
 
-        DrawGlyph(platform, world.Player, originX, originY, tile);
+        DrawGlyphAt(platform, world.Player.Glyph, world.Player.Color, world.Player.Position, originX, originY, tile);
     }
 
-    private static void DrawGlyph(SdlPlatform platform, Actor actor, int originX, int originY, int tile)
+    private static void DrawGlyph(SdlPlatform platform, Actor actor, int originX, int originY, int tile) =>
+        DrawGlyphAt(platform, actor.Glyph, actor.Color, actor.Position, originX, originY, tile);
+
+    private static void DrawGlyphAt(
+        SdlPlatform platform, char glyphChar, Color color, Position pos, int originX, int originY, int tile)
     {
         var scale = Math.Max(1, tile / 6);
-        var glyph = actor.Glyph.ToString();
+        var glyph = glyphChar.ToString();
         var glyphWidth = BlockFont.MeasureWidth(glyph, scale);
         var glyphHeight = BlockFont.LineHeight(scale);
-        var x = originX + actor.Position.X * tile + (tile - glyphWidth) / 2;
-        var y = originY + actor.Position.Y * tile + (tile - glyphHeight) / 2;
-        BlockFont.DrawOutlined(platform, glyph, x, y, scale, actor.Color, Color.Black);
+        var x = originX + pos.X * tile + (tile - glyphWidth) / 2;
+        var y = originY + pos.Y * tile + (tile - glyphHeight) / 2;
+        BlockFont.DrawOutlined(platform, glyph, x, y, scale, color, Color.Black);
     }
 
     private static void DrawHud(SdlPlatform platform, GameWorld world)
@@ -89,6 +107,7 @@ public static class WorldView
 
         BlockFont.Draw(platform, $"SCORE {world.Score}", 520, 10, 3, Color.Stairs);
         BlockFont.Draw(platform, $"GOLD {player.Gold}", 520, 40, 2, Color.Gold);
+        BlockFont.Draw(platform, $"POTIONS {player.Inventory.CountOf<HealthPotion>()} [Q]", 700, 40, 2, Color.Potion);
     }
 
     private static void DrawLog(SdlPlatform platform, GameWorld world)

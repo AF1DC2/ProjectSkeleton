@@ -1,5 +1,6 @@
 using TheAdventure.Core;
 using TheAdventure.Game.Entities;
+using TheAdventure.Game.Items;
 using TheAdventure.Game.Map;
 
 namespace TheAdventure.Game;
@@ -24,6 +25,7 @@ public sealed class GameWorld
         Map = level.Map;
         Player = new Player(level.PlayerStart);
         SpawnMonsters(level);
+        SpawnItems(level);
         RecomputeFieldOfView();
         Log.Add("YOU ENTER THE UNDERWORLD.");
     }
@@ -31,6 +33,9 @@ public sealed class GameWorld
     public DungeonMap Map { get; private set; }
     public Player Player { get; }
     public List<Monster> Monsters { get; } = new();
+
+    // Items lying on the current floor
+    public Dictionary<Position, Item> FloorItems { get; } = new();
     public MessageLog Log { get; } = new();
     public int Depth { get; private set; }
     public int Score { get; private set; }
@@ -54,9 +59,29 @@ public sealed class GameWorld
         else if (Map.IsWalkable(target))
         {
             Player.Position = target;
+            TryPickUp();
             EndPlayerTurn();
         }
         // Walking into a wall does nothing and does not cost a turn
+    }
+
+    // Use carried health potion (costs a turn)
+    public void UseHealthPotion()
+    {
+        if (Status != GameStatus.Playing)
+        {
+            return;
+        }
+
+        var index = Player.Inventory.FirstIndexOf<HealthPotion>();
+        if (index < 0)
+        {
+            Log.Add("YOU HAVE NO POTIONS.");
+            return;
+        }
+
+        Player.Inventory.RemoveAt(index)!.Apply(this);
+        EndPlayerTurn();
     }
 
     // Use the stairs under the hero to go deeper
@@ -85,7 +110,9 @@ public sealed class GameWorld
         Map = level.Map;
         Player.Position = level.PlayerStart;
         Monsters.Clear();
+        FloorItems.Clear();
         SpawnMonsters(level);
+        SpawnItems(level);
         RecomputeFieldOfView();
         Log.Add($"YOU DESCEND TO FLOOR {Depth}.");
     }
@@ -106,13 +133,41 @@ public sealed class GameWorld
         {
             case Monster slain:
                 Score += slain.Bounty;
-                Player.AddGold(slain.Bounty);
                 Log.Add($"{slain.Name} IS SLAIN. +{slain.Bounty}");
                 break;
             case Entities.Player:
                 Status = GameStatus.Lost;
                 Log.Add("YOU HAVE FALLEN.");
                 break;
+        }
+    }
+
+    // Collect gold
+    public void CollectGold(int amount)
+    {
+        Player.AddGold(amount);
+        Score += amount;
+    }
+
+    private void TryPickUp()
+    {
+        if (!FloorItems.Remove(Player.Position, out var item))
+        {
+            return;
+        }
+
+        if (item.ConsumeOnPickup)
+        {
+            item.Apply(this);
+        }
+        else if (Player.Inventory.TryAdd(item))
+        {
+            Log.Add($"YOU PICK UP {item.Name}.");
+        }
+        else
+        {
+            FloorItems[Player.Position] = item;
+            Log.Add($"YOUR PACK IS FULL.");
         }
     }
 
@@ -166,6 +221,36 @@ public sealed class GameWorld
                 freeCells.RemoveAt(index);
                 occupied.Add(position);
                 Monsters.Add(MonsterFactory.CreateForDepth(Depth, position, _rng));
+            }
+        }
+    }
+
+    private void SpawnItems(GeneratedLevel level)
+    {
+        foreach (var room in level.Rooms)
+        {
+            var drops = _rng.Next(0, 2) + 1;
+            for (var i = 0; i < drops; i++)
+            {
+                if (ItemFactory.Roll(Depth, _rng) is not { } item)
+                {
+                    continue;
+                }
+
+                var freeCells = room.InteriorCells()
+                    .Where(c => Map.IsWalkable(c)
+                                && Map.Tiles[c] != TileType.StairsDown
+                                && c != Player.Position
+                                && MonsterAt(c) is null
+                                && !FloorItems.ContainsKey(c))
+                    .ToList();
+
+                if (freeCells.Count == 0)
+                {
+                    break;
+                }
+
+                FloorItems[freeCells[_rng.Next(freeCells.Count)]] = item;
             }
         }
     }

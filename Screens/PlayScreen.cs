@@ -35,6 +35,11 @@ public sealed class PlayScreen : IScreen
 
         HandleMovement(input);
 
+        if (input.WasPressed(KeyCode.Q))
+        {
+            _world.UseHealthPotion();
+        }
+
         if (input.FirstPressed(KeyCode.Period, KeyCode.Return, KeyCode.KpEnter) is not null)
         {
             _world.Descend();
