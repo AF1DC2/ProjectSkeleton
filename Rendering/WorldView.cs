@@ -1,3 +1,4 @@
+// AI-generated
 using TheAdventure.Core;
 using TheAdventure.Game;
 using TheAdventure.Game.Entities;
@@ -26,6 +27,10 @@ public static class WorldView
         DrawActors(platform, world, originX, originY, tile);
         DrawHud(platform, world);
         DrawLog(platform, world);
+
+        BlockFont.Draw(
+            platform, "WASD MOVE   Q DRINK   ENTER DESCEND   ESC MENU",
+            12, platform.Height - 18, 2, new Color(110, 110, 125));
     }
 
     private static void DrawItems(SdlPlatform platform, GameWorld world, int originX, int originY, int tile)
@@ -112,11 +117,12 @@ public static class WorldView
 
     private static void DrawLog(SdlPlatform platform, GameWorld world)
     {
-        var y = platform.Height - LogHeight + 10;
-        foreach (var message in world.Log.Recent(4))
+        var y = platform.Height - LogHeight + 6;
+        foreach (var message in world.Log.Recent(3))
         {
             BlockFont.Draw(platform, message, 12, y, 2, new Color(170, 170, 180));
             y += BlockFont.LineHeight(2) + 6;
         }
     }
 }
+// end AI-generated

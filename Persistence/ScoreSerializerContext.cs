@@ -1,3 +1,4 @@
+// AI-generated
 using System.Text.Json.Serialization;
 
 namespace TheAdventure.Persistence;
@@ -6,3 +7,4 @@ namespace TheAdventure.Persistence;
 [JsonSourceGenerationOptions(WriteIndented = true)]
 [JsonSerializable(typeof(List<ScoreEntry>))]
 internal sealed partial class ScoreSerializerContext : JsonSerializerContext;
+// end AI-generated

@@ -1,3 +1,4 @@
+// AI-generated
 using System.Collections;
 
 namespace TheAdventure.Core;
@@ -63,3 +64,4 @@ public sealed class Grid<T> : IEnumerable<(Position Pos, T Value)>
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
+// end AI-generated

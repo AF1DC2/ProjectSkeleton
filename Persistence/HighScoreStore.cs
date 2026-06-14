@@ -1,3 +1,4 @@
+// AI-generated
 using System.Text.Json;
 
 namespace TheAdventure.Persistence;
@@ -78,3 +79,4 @@ public sealed class HighScoreStore
         }
     }
 }
+// end AI-generated

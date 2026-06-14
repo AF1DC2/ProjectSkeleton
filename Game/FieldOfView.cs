@@ -1,3 +1,4 @@
+// AI-generated
 using TheAdventure.Core;
 using TheAdventure.Game.Map;
 
@@ -65,3 +66,4 @@ public static class FieldOfView
         }
     }
 }
+// end AI-generated

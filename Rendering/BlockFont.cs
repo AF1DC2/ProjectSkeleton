@@ -1,3 +1,4 @@
+// AI-generated
 namespace TheAdventure.Rendering;
 
 /// <summary> Bitmap font drawn with filled rectangles </summary>
@@ -116,3 +117,4 @@ public static class BlockFont
         DrawOutlined(platform, text, x, y, scale, fill, outline);
     }
 }
+// end AI-generated

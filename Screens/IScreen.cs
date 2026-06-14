@@ -3,7 +3,7 @@ using TheAdventure.Rendering;
 
 namespace TheAdventure.Screens;
 
-/// <summary> Future game screen </summary>
+/// <summary> Interface between the game loop and game content </summary>
 public interface IScreen
 {
     IScreen? Update(InputState input, double deltaSeconds);

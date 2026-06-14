@@ -1,3 +1,4 @@
+// AI-generated
 using TheAdventure.Core;
 
 namespace TheAdventure.Game.Map;
@@ -107,3 +108,4 @@ public sealed class DungeonGenerator
         }
     }
 }
+// end AI-generated

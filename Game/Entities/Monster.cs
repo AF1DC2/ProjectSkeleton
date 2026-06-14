@@ -1,3 +1,4 @@
+// AI-generated
 using TheAdventure.Core;
 using TheAdventure.Rendering;
 
@@ -56,3 +57,4 @@ public abstract class Monster : Actor
         }
     }
 }
+// end AI-generated

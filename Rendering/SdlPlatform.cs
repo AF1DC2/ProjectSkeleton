@@ -1,3 +1,4 @@
+// AI-generated
 using Silk.NET.Maths;
 using Silk.NET.SDL;
 using TheAdventure.Input;
@@ -114,3 +115,4 @@ public sealed unsafe class SdlPlatform : IDisposable
         _disposed = true;
     }
 }
+// end AI-generated

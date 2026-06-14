@@ -11,6 +11,7 @@ public sealed class GameOverScreen : IScreen
     private readonly bool _won;
     private readonly int _score;
     private readonly int _depth;
+    private readonly ScoreEntry _entry;
     private readonly Task<IReadOnlyList<ScoreEntry>> _recordTask;
 
     private IReadOnlyList<ScoreEntry>? _scores;
@@ -22,8 +23,8 @@ public sealed class GameOverScreen : IScreen
         _score = world.Score;
         _depth = world.Depth;
 
-        var entry = new ScoreEntry(_score, _depth, _won, DateTime.UtcNow);
-        _recordTask = new HighScoreStore().RecordAsync(entry);
+        _entry = new ScoreEntry(_score, _depth, _won, DateTime.UtcNow);
+        _recordTask = new HighScoreStore().RecordAsync(_entry);
     }
 
     public IScreen? Update(InputState input, double deltaSeconds)
@@ -39,6 +40,11 @@ public sealed class GameOverScreen : IScreen
                 _error = (_recordTask.Exception?.InnerException as SaveGameException)?.Message
                          ?? "COULD NOT SAVE YOUR SCORE.";
             }
+        }
+
+        if (input.WasPressed(KeyCode.R))
+        {
+            return new PlayScreen();
         }
 
         if (input.FirstPressed(KeyCode.Return, KeyCode.KpEnter, KeyCode.Escape, KeyCode.Space) is not null)
@@ -69,24 +75,9 @@ public sealed class GameOverScreen : IScreen
         }
         else
         {
-            DrawScoreTable(platform);
+            Scoreboard.Draw(platform, _scores, 270, _entry);
         }
 
-        BlockFont.DrawCentered(platform, "PRESS ENTER", platform.Width, platform.Height - 60, 3, Color.Player);
-    }
-
-    private void DrawScoreTable(SdlPlatform platform)
-    {
-        var y = 270;
-        var rank = 1;
-        foreach (var entry in _scores!)
-        {
-            var outcome = entry.Won ? "ESCAPED" : "DIED";
-            var line = $"{rank}. {entry.Score}  FLOOR {entry.Depth}  {outcome}";
-            var color = entry.Score == _score && entry.Depth == _depth ? Color.Stairs : new Color(180, 180, 190);
-            BlockFont.DrawCentered(platform, line, platform.Width, y, 2, color);
-            y += BlockFont.LineHeight(2) + 8;
-            rank++;
-        }
+        BlockFont.DrawCentered(platform, "ENTER  MENU      R  PLAY AGAIN", platform.Width, platform.Height - 56, 3, Color.Player);
     }
 }
