@@ -24,13 +24,7 @@ public sealed class PlayScreen : IScreen
 
         if (_world.Status != GameStatus.Playing)
         {
-            // Run finished
-            if (input.AnyPressed)
-            {
-                return new TitleScreen();
-            }
-
-            return this;
+            return new GameOverScreen(_world);
         }
 
         HandleMovement(input);
@@ -62,17 +56,5 @@ public sealed class PlayScreen : IScreen
         }
     }
 
-    public void Render(SdlPlatform platform)
-    {
-        WorldView.Render(platform, _world);
-
-        if (_world.Status == GameStatus.Won)
-        {
-            BlockFont.DrawCenteredOutlined(platform, "YOU ESCAPED!", platform.Width, 320, 6, Color.Stairs, Color.Black);
-        }
-        else if (_world.Status == GameStatus.Lost)
-        {
-            BlockFont.DrawCenteredOutlined(platform, "YOU DIED", platform.Width, 320, 6, Color.HealthBar, Color.Black);
-        }
-    }
+    public void Render(SdlPlatform platform) => WorldView.Render(platform, _world);
 }
